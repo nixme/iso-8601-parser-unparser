@@ -516,6 +516,12 @@ static BOOL is_leap_year(NSUInteger year);
 						}
 					}
 				}
+                else // Process minutes and second w/o timeSep
+                {
+                    minute = read_segment_2digits(ch, &ch);
+                    if (isdigit(*ch))
+                        second = read_segment_2digits(ch, &ch);
+                }
 
 				if (!strict) {
 					if (isspace(*ch)) ++ch;
@@ -566,6 +572,10 @@ static BOOL is_leap_year(NSUInteger year);
 			}
 		}
 
+        if (timeZone == nil)  // No time zone specified, use local time.
+        {
+            timeZone = [NSTimeZone localTimeZone];
+        }
 		if (isValidDate) {
 			components.year = year;
 			components.day = day;
