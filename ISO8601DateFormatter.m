@@ -153,9 +153,14 @@ static BOOL is_leap_year(NSUInteger year);
 - (NSDateComponents *) dateComponentsFromString:(NSString *)string timeZone:(out NSTimeZone **)outTimeZone {
 	return [self dateComponentsFromString:string timeZone:outTimeZone range:NULL];
 }
-- (NSDateComponents *) dateComponentsFromString:(NSString *)string timeZone:(out NSTimeZone **)outTimeZone range:(out NSRange *)outRange {
+- (NSDateComponents *) dateComponentsFromString:(NSString *)string timeZone:(out NSTimeZone **)outTimeZone range:(out NSRange *)outRange
+{
+	return [self dateComponentsFromString:string timeZone:outTimeZone range:outRange milliseconds:NULL];
+}
+- (NSDateComponents *) dateComponentsFromString:(NSString *)string timeZone:(out NSTimeZone **)outTimeZone range:(out NSRange *)outRange milliseconds:(out NSTimeInterval *)outMilliseconds {
 	NSDate *now = [NSDate date];
-
+    
+    NSTimeInterval milliseconds = 0;
 	NSDateComponents *components = [[[NSDateComponents alloc] init] autorelease];
 	NSDateComponents *nowComponents = [parsingCalendar components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit) fromDate:now];
 
@@ -572,6 +577,7 @@ static BOOL is_leap_year(NSUInteger year);
 			components.hour = hour;
 			components.minute = (NSInteger)minute;
 			components.second = (NSInteger)second;
+            milliseconds = (second - (NSInteger)second);
 
 			switch(dateSpecification) {
 				case monthAndDate:
@@ -607,6 +613,9 @@ static BOOL is_leap_year(NSUInteger year);
 	if (outTimeZone) {
 		*outTimeZone = timeZone;
 	}
+    if (outMilliseconds) {
+        *outMilliseconds = milliseconds;
+    }
 
 	return components;
 }
@@ -619,12 +628,13 @@ static BOOL is_leap_year(NSUInteger year);
 }
 - (NSDate *) dateFromString:(NSString *)string timeZone:(out NSTimeZone **)outTimeZone range:(out NSRange *)outRange {
 	NSTimeZone *timeZone = nil;
-	NSDateComponents *components = [self dateComponentsFromString:string timeZone:&timeZone range:outRange];
+    NSTimeInterval milliseconds = 0;
+	NSDateComponents *components = [self dateComponentsFromString:string timeZone:&timeZone range:outRange milliseconds:&milliseconds];
 	if (outTimeZone)
 		*outTimeZone = timeZone;
 	parsingCalendar.timeZone = timeZone;
 
-	return [parsingCalendar dateFromComponents:components];
+	return [[parsingCalendar dateFromComponents:components] dateByAddingTimeInterval:milliseconds];
 }
 
 - (BOOL)getObjectValue:(id *)outValue forString:(NSString *)string errorDescription:(NSString **)error {
